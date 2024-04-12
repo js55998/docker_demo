@@ -1,0 +1,12 @@
+version: '3'
+services:
+  webappsite:
+   image: nginx:latest
+   container_name: website
+   volumes:
+     - /Devlopment/DOCKER/website/html:/user/share/nginx/html
+   ports:
+   - 80:80
+   restart: always
+
+
