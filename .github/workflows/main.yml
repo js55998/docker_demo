@@ -14,18 +14,29 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x, 18.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Docker Login
+      run: docker login -u ${{ secrets.DOCKER_USER_NAME }} -p ${{secrets.DOCKER_PASSWORD}}
+
+    - name: Build Docker Image
+      run: docker build -t js55998/htmlapp .
+    
+    - name: Publish Image to Docker Hub
+      run: docker push js55998/htmlapp:latest 
+
+  deploy:
+    needs: build
+    runs-on: aws-ec2
+    steps:
+      - name: Pull Docker Image
+        run: docker pull js55998/htmlapp:latest
+    
+      - name: Delete Old Container 
+        run: docker rm -f htmlContainer
+    
+      - name: Run Docker Container
+        run: docker run -d -p 3000:80 --name htmlContainer js55998/htmlapp
+    
